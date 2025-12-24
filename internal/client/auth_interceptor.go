@@ -2,9 +2,9 @@ package client
 
 import (
 	"context"
-	"log"
 	"sync"
 
+	"github.com/OvsienkoValeriya/GophKeeper/internal/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -27,7 +27,7 @@ func NewAuthInterceptor(authClient *AuthClient, authMethods map[string]bool, tok
 
 func (interceptor *AuthInterceptor) UnaryInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		log.Println("UnaryInterceptor: ", method)
+		logger.Sugar.Info("UnaryInterceptor: ", method)
 		if interceptor.authMethods[method] {
 			ctx = interceptor.attachToken(ctx)
 		}
@@ -47,7 +47,7 @@ func (interceptor *AuthInterceptor) attachToken(ctx context.Context) context.Con
 
 func (interceptor *AuthInterceptor) StreamInterceptor() grpc.StreamClientInterceptor {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		log.Println("StreamInterceptor: ", method)
+		logger.Sugar.Info("StreamInterceptor: ", method)
 		if interceptor.authMethods[method] {
 			ctx = interceptor.attachToken(ctx)
 		}

@@ -4,11 +4,11 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"log"
 	"os"
 	"time"
 
 	"github.com/OvsienkoValeriya/GophKeeper/internal/client"
+	"github.com/OvsienkoValeriya/GophKeeper/internal/logger"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -49,12 +49,13 @@ var rootCmd = &cobra.Command{
 		if cmd.Flags().Changed("tls-cert") {
 			clientConfig.TLSCertPath = tlsCertPath
 		}
+		logger.Init("error", "console")
 
 		var opts []grpc.DialOption
 		if clientConfig.TLSEnabled {
 			creds, err := credentials.NewClientTLSFromFile(clientConfig.TLSCertPath, "")
 			if err != nil {
-				log.Fatalf("Failed to load TLS credentials: %v", err)
+				logger.Sugar.Fatalf("Failed to load TLS credentials", "error", err)
 			}
 			opts = append(opts, grpc.WithTransportCredentials(creds))
 		} else {
@@ -63,13 +64,13 @@ var rootCmd = &cobra.Command{
 
 		grpcConn, err = grpc.NewClient(serverAddr, opts...)
 		if err != nil {
-			log.Fatalf("Failed to connect to server: %v", err)
+			logger.Sugar.Fatalf("Failed to connect to server", "error", err)
 		}
 
 		authClient = client.NewAuthClient(grpcConn)
 		tokenStore, err = client.NewFileTokenStore()
 		if err != nil {
-			log.Fatalf("Failed to create token store: %v", err)
+			logger.Sugar.Fatalf("Failed to create token store", "error", err)
 		}
 		resourceClient = client.NewResourceClient(grpcConn, tokenStore)
 
@@ -96,7 +97,7 @@ var rootCmd = &cobra.Command{
 			if softAuthCommands[cmdName] {
 				return
 			}
-			log.Fatalf("Not authenticated. Please login or register first.")
+			logger.Sugar.Fatalf("Not authenticated. Please login or register first.")
 		}
 		if expired {
 			_, refreshToken, err := tokenStore.LoadTokens()
@@ -104,14 +105,14 @@ var rootCmd = &cobra.Command{
 				if softAuthCommands[cmdName] {
 					return
 				}
-				log.Fatalf("Failed to load tokens: %v", err)
+				logger.Sugar.Fatalf("Failed to load tokens", "error", err)
 			}
 			respRefresh, err := authClient.RefreshToken(refreshToken)
 			if err != nil {
 				if softAuthCommands[cmdName] {
 					return
 				}
-				log.Fatalf("Session expired. Please login again.")
+				logger.Sugar.Fatalf("Session expired. Please login again.")
 			}
 			userID, _ := tokenStore.GetUserID()
 			tokenStore.SaveTokensWithUserID(userID, respRefresh.GetAccessToken(), respRefresh.GetRefreshToken(), time.Now().Add(time.Hour*1))
@@ -121,6 +122,7 @@ var rootCmd = &cobra.Command{
 		if grpcConn != nil {
 			grpcConn.Close()
 		}
+		logger.Sync()
 	},
 }
 

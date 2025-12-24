@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	pb "github.com/OvsienkoValeriya/GophKeeper/api/gen"
+	"github.com/OvsienkoValeriya/GophKeeper/internal/logger"
 	"github.com/OvsienkoValeriya/GophKeeper/internal/repository/storage"
 	"github.com/OvsienkoValeriya/GophKeeper/internal/server/auth"
 	"github.com/OvsienkoValeriya/GophKeeper/internal/server/services"
@@ -32,29 +32,32 @@ func main() {
 	minioBucket := getEnv("MINIO_BUCKET", "gophkeeper")
 	minioUseSSL := getEnv("MINIO_USE_SSL", "false") == "true"
 
+	logger.InitDefault()
+	defer logger.Sync()
+
 	userStore, err := services.NewPostgresUserStore(databaseURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		logger.Sugar.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer userStore.Close()
-	log.Println("Connected to database")
+	logger.Sugar.Info("Connected to database")
 
 	if err := userStore.RunMigrations(); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+		logger.Sugar.Fatalf("Failed to run migrations: %v", err)
 	}
-	log.Println("Migrations run successfully")
+	logger.Sugar.Info("Migrations run successfully")
 
 	resourceRepo, err := storage.NewPostgresResourceRepository(databaseURL)
 	if err != nil {
-		log.Fatalf("Failed to create resource repository: %v", err)
+		logger.Sugar.Fatalf("Failed to create resource repository: %v", err)
 	}
-	log.Println("Resource repository created")
+	logger.Sugar.Info("Resource repository created")
 
 	minioStorage, err := storage.NewMinioStorage(minioEndpoint, minioAccessKey, minioSecretKey, minioBucket, minioUseSSL)
 	if err != nil {
-		log.Fatalf("Failed to create MinIO storage: %v", err)
+		logger.Sugar.Fatalf("Failed to create MinIO storage: %v", err)
 	}
-	log.Println("MinIO storage connected")
+	logger.Sugar.Info("MinIO storage connected")
 
 	resourceService := service.NewResourceService(resourceRepo, minioStorage)
 
@@ -82,21 +85,21 @@ func main() {
 	go func(ctx context.Context, wg *sync.WaitGroup, grpcServer *grpc.Server) {
 		defer wg.Done()
 		<-ctx.Done()
-		log.Println("Got signal to stop gRPC server")
+		logger.Sugar.Info("Got signal to stop gRPC server")
 		grpcServer.GracefulStop()
 	}(ctx, &wg, grpcServer)
 
 	listener, err := net.Listen("tcp", serverAddress)
 	if err != nil {
-		log.Fatalf("Failed to listen on %s: %v", serverAddress, err)
+		logger.Sugar.Fatalf("Failed to listen on %s: %v", serverAddress, err)
 	}
 
-	log.Printf("gRPC server listening on %s", serverAddress)
+	logger.Sugar.Infof("gRPC server listening on %s", serverAddress)
 	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+		logger.Sugar.Fatalf("Failed to serve", "error", err)
 	}
 	wg.Wait()
-	log.Println("gRPC server stopped")
+	logger.Sugar.Info("gRPC server stopped")
 }
 
 func getEnv(key, defaultValue string) string {

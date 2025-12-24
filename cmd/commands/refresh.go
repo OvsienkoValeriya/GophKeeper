@@ -29,7 +29,11 @@ var refreshCmd = &cobra.Command{
 		}
 
 		expiresAt := time.Now().Add(time.Hour * 1)
-		userID, _ := tokenStore.GetUserID()
+		userID, err := tokenStore.GetUserID()
+		if err != nil {
+			fmt.Printf("Failed to get user ID: %v\n", err)
+			return
+		}
 		tokenStore.SaveTokensWithUserID(userID, respRefresh.GetAccessToken(), respRefresh.GetRefreshToken(), expiresAt)
 
 		fmt.Println("✓ Tokens refreshed successfully!")

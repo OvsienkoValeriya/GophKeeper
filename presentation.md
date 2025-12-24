@@ -62,5 +62,9 @@
     go run ./cmd/client/main.go get bigbinaryfile | head -20
     go run ./cmd/client/main.go get big-text-note | head -20
 
+    # 9. Удаляем секреты 
+    go run ./cmd/client/main.go delete test@gmail.com
+    go run ./cmd/client/main.go delete bigbinaryfile
+
 
 ```

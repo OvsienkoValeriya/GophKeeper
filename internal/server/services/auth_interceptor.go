@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/OvsienkoValeriya/GophKeeper/internal/logger"
 	"github.com/OvsienkoValeriya/GophKeeper/internal/server/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -27,7 +27,7 @@ func NewAuthInterceptor(jwtConfig *auth.JWTConfig) *AuthInterceptor {
 
 func (interceptor *AuthInterceptor) UnaryInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		fmt.Println("unaryInterceptor: ", info.FullMethod)
+		logger.Sugar.Info("UnaryInterceptor: ", info.FullMethod)
 		newCtx, err := interceptor.authorize(ctx, info.FullMethod)
 		if err != nil {
 			return nil, err
@@ -38,7 +38,7 @@ func (interceptor *AuthInterceptor) UnaryInterceptor() grpc.UnaryServerIntercept
 
 func (interceptor *AuthInterceptor) StreamInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-		fmt.Println("streamInterceptor: ", info.FullMethod)
+		logger.Sugar.Info("StreamInterceptor: ", info.FullMethod)
 		_, err := interceptor.authorize(stream.Context(), info.FullMethod)
 		if err != nil {
 			return err

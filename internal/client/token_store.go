@@ -61,7 +61,7 @@ func (s *FileTokenStore) SaveTokensWithUserID(userID uint, accessToken, refreshT
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		ExpiresAt:    expiresAt,
-		HasMasterKey: existing.HasMasterKey,
+		HasMasterKey: existing.UserID == userID && existing.HasMasterKey,
 	}
 
 	data, err := json.MarshalIndent(record, "", "  ")

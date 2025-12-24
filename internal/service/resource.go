@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/OvsienkoValeriya/GophKeeper/internal/logger"
 	"github.com/OvsienkoValeriya/GophKeeper/internal/models"
 	"github.com/OvsienkoValeriya/GophKeeper/internal/repository"
 	"github.com/OvsienkoValeriya/GophKeeper/internal/repository/storage"
@@ -63,6 +64,7 @@ func (s *ResourceService) Upload(ctx context.Context, userID int64, name string,
 		// Rollback: if the database write failed, delete from MinIO
 		if resource.Storage == models.StorageMinio {
 			_ = s.fileStorage.Delete(ctx, resource.ObjectKey, minio.RemoveObjectOptions{})
+			logger.Sugar.Error("failed to delete from file storage", "error", err)
 		}
 		return nil, fmt.Errorf("failed to save resource: %w", err)
 	}

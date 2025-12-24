@@ -3,9 +3,9 @@ package migrations
 import (
 	"embed"
 	"fmt"
-	"log"
 	"sort"
 
+	"github.com/OvsienkoValeriya/GophKeeper/internal/logger"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -34,12 +34,12 @@ func Run(db *sqlx.DB) error {
 			return fmt.Errorf("failed to read migration file %s: %w", filename, err)
 		}
 
-		log.Printf("Applying migration: %s", filename)
+		logger.Sugar.Infof("Applying migration: %s", filename)
 		if _, err := db.Exec(string(content)); err != nil {
 			return fmt.Errorf("failed to execute migration %s: %w", filename, err)
 		}
 	}
 
-	log.Println("All migrations applied successfully")
+	logger.Sugar.Infof("All migrations applied successfully")
 	return nil
 }
