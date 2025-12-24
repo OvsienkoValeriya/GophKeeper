@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS resources (
     metadata JSONB,                    -- additional metadata (encrypted)
     data BYTEA,                        -- data (if storage = "postgres")
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_resources_user_id ON resources(user_id);

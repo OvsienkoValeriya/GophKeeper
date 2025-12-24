@@ -22,7 +22,7 @@ var refreshCmd = &cobra.Command{
 			return
 		}
 
-		newAccessToken, newRefreshToken, err := authClient.RefreshToken(storedAccessToken)
+		respRefresh, err := authClient.RefreshToken(storedAccessToken)
 		if err != nil {
 			fmt.Printf("Failed to refresh token: %v\n", err)
 			return
@@ -30,7 +30,7 @@ var refreshCmd = &cobra.Command{
 
 		expiresAt := time.Now().Add(time.Hour * 1)
 		userID, _ := tokenStore.GetUserID()
-		tokenStore.SaveTokensWithUserID(userID, newAccessToken, newRefreshToken, expiresAt)
+		tokenStore.SaveTokensWithUserID(userID, respRefresh.GetAccessToken(), respRefresh.GetRefreshToken(), expiresAt)
 
 		fmt.Println("✓ Tokens refreshed successfully!")
 	},

@@ -42,20 +42,21 @@ func NewPostgresUserStore(dsn string) (*PostgresUserStore, error) {
 	}
 
 	store := &PostgresUserStore{db: db}
-	if err := migrations.Run(db); err != nil {
-		return nil, fmt.Errorf("failed to run migrations: %w", err)
-	}
 
 	return store, nil
+}
+
+func (s *PostgresUserStore) RunMigrations() error {
+	return migrations.Run(s.db)
 }
 
 func (s *PostgresUserStore) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	query := `
 		INSERT INTO users (login, password_hash)
 		VALUES ($1, $2)
-		RETURNING id
+		RETURNING id, created_at
 	`
-	err := s.db.QueryRowxContext(ctx, query, user.Username, user.Password).Scan(&user.ID)
+	err := s.db.QueryRowxContext(ctx, query, user.Username, user.Password).Scan(&user.ID, &user.CreatedAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, ErrUserAlreadyExists

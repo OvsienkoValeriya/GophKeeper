@@ -106,7 +106,7 @@ var rootCmd = &cobra.Command{
 				}
 				log.Fatalf("Failed to load tokens: %v", err)
 			}
-			newAccessToken, newRefreshToken, err := authClient.RefreshToken(refreshToken)
+			respRefresh, err := authClient.RefreshToken(refreshToken)
 			if err != nil {
 				if softAuthCommands[cmdName] {
 					return
@@ -114,7 +114,7 @@ var rootCmd = &cobra.Command{
 				log.Fatalf("Session expired. Please login again.")
 			}
 			userID, _ := tokenStore.GetUserID()
-			tokenStore.SaveTokensWithUserID(userID, newAccessToken, newRefreshToken, time.Now().Add(time.Hour*1))
+			tokenStore.SaveTokensWithUserID(userID, respRefresh.GetAccessToken(), respRefresh.GetRefreshToken(), time.Now().Add(time.Hour*1))
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {

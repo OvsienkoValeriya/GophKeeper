@@ -67,7 +67,7 @@ func (c *ResourceClient) CreateResource(name, resourceType string, encryptedData
 //   - *pb.GetResourceResponse: resource information
 //   - error: error if the resource retrieval failed
 func (c *ResourceClient) GetResourceByName(name string) (*pb.GetResourceResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	ctx = c.withAuth(ctx)
 

@@ -11,6 +11,7 @@ import (
 	"github.com/OvsienkoValeriya/GophKeeper/internal/repository"
 	"github.com/OvsienkoValeriya/GophKeeper/internal/repository/storage"
 	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 )
 
 var (
@@ -52,7 +53,7 @@ func (s *ResourceService) Upload(ctx context.Context, userID int64, name string,
 		resource.Storage = models.StorageMinio
 		resource.ObjectKey = generateObjectKey(userID)
 
-		if err := s.fileStorage.Upload(ctx, resource.ObjectKey, bytes.NewReader(data), resource.Size); err != nil {
+		if err := s.fileStorage.Upload(ctx, resource.ObjectKey, bytes.NewReader(data), resource.Size, minio.PutObjectOptions{}); err != nil {
 			return nil, fmt.Errorf("failed to upload to file storage: %w", err)
 		}
 	}
@@ -61,7 +62,7 @@ func (s *ResourceService) Upload(ctx context.Context, userID int64, name string,
 	if err != nil {
 		// Rollback: if the database write failed, delete from MinIO
 		if resource.Storage == models.StorageMinio {
-			_ = s.fileStorage.Delete(context.Background(), resource.ObjectKey)
+			_ = s.fileStorage.Delete(ctx, resource.ObjectKey, minio.RemoveObjectOptions{})
 		}
 		return nil, fmt.Errorf("failed to save resource: %w", err)
 	}
@@ -84,7 +85,7 @@ func (s *ResourceService) Get(ctx context.Context, userID, resourceID int64) (*m
 	if resource.Storage == models.StoragePostgres {
 		data = resource.Data
 	} else {
-		reader, err := s.fileStorage.Download(ctx, resource.ObjectKey)
+		reader, err := s.fileStorage.Download(ctx, resource.ObjectKey, minio.GetObjectOptions{})
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to download from file storage: %w", err)
 		}
@@ -110,7 +111,7 @@ func (s *ResourceService) GetByName(ctx context.Context, userID int64, name stri
 	if resource.Storage == models.StoragePostgres {
 		data = resource.Data
 	} else {
-		reader, err := s.fileStorage.Download(ctx, resource.ObjectKey)
+		reader, err := s.fileStorage.Download(ctx, resource.ObjectKey, minio.GetObjectOptions{})
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to download from file storage: %w", err)
 		}
@@ -176,7 +177,7 @@ func (s *ResourceService) Update(ctx context.Context, userID, resourceID int64, 
 			resource.ObjectKey = generateObjectKey(userID)
 		}
 
-		if err := s.fileStorage.Upload(ctx, resource.ObjectKey, bytes.NewReader(data), newSize); err != nil {
+		if err := s.fileStorage.Upload(ctx, resource.ObjectKey, bytes.NewReader(data), newSize, minio.PutObjectOptions{}); err != nil {
 			return nil, fmt.Errorf("failed to upload to file storage: %w", err)
 		}
 	}
@@ -184,14 +185,14 @@ func (s *ResourceService) Update(ctx context.Context, userID, resourceID int64, 
 	if err := s.resourceRepo.Update(ctx, resource); err != nil {
 		// Rollback: if the database write failed and we uploaded a new file
 		if newStorage == models.StorageMinio && oldStorage != models.StorageMinio {
-			_ = s.fileStorage.Delete(context.Background(), resource.ObjectKey)
+			_ = s.fileStorage.Delete(ctx, resource.ObjectKey, minio.RemoveObjectOptions{})
 		}
 		return nil, fmt.Errorf("failed to update resource: %w", err)
 	}
 
 	// If it was in MinIO before and now in PostgreSQL, delete the old file
 	if oldStorage == models.StorageMinio && newStorage == models.StoragePostgres && oldObjectKey != "" {
-		_ = s.fileStorage.Delete(ctx, oldObjectKey)
+		_ = s.fileStorage.Delete(ctx, oldObjectKey, minio.RemoveObjectOptions{})
 	}
 
 	return resource, nil
@@ -208,7 +209,7 @@ func (s *ResourceService) Delete(ctx context.Context, userID, resourceID int64) 
 	}
 
 	if resource.Storage == models.StorageMinio && resource.ObjectKey != "" {
-		if err := s.fileStorage.Delete(ctx, resource.ObjectKey); err != nil {
+		if err := s.fileStorage.Delete(ctx, resource.ObjectKey, minio.RemoveObjectOptions{}); err != nil {
 			return fmt.Errorf("failed to delete from file storage: %w", err)
 		}
 	}

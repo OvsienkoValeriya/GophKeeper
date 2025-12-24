@@ -21,7 +21,7 @@ func NewAuthClient(cc *grpc.ClientConn) *AuthClient {
 	}
 }
 
-func (client *AuthClient) Login(username, password string) (userId, accessToken, refreshToken string, err error) {
+func (client *AuthClient) Login(username, password string) (*pb.LoginResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -30,15 +30,10 @@ func (client *AuthClient) Login(username, password string) (userId, accessToken,
 		Password: proto.String(password),
 	}
 
-	res, err := client.service.Login(ctx, req)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	return *res.UserId, *res.AccessToken, *res.RefreshToken, nil
+	return client.service.Login(ctx, req)
 }
 
-func (client *AuthClient) Register(username, password string) (userId, accessToken, refreshToken string, err error) {
+func (client *AuthClient) Register(username, password string) (*pb.RegisterResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -47,15 +42,10 @@ func (client *AuthClient) Register(username, password string) (userId, accessTok
 		Password: proto.String(password),
 	}
 
-	res, err := client.service.Register(ctx, req)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	return *res.UserId, *res.AccessToken, *res.RefreshToken, nil
+	return client.service.Register(ctx, req)
 }
 
-func (client *AuthClient) RefreshToken(accessToken string) (newAccessToken, newRefreshToken string, err error) {
+func (client *AuthClient) RefreshToken(accessToken string) (*pb.RefreshTokenResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -63,15 +53,10 @@ func (client *AuthClient) RefreshToken(accessToken string) (newAccessToken, newR
 
 	req := &pb.RefreshTokenRequest{}
 
-	res, err := client.service.RefreshToken(ctx, req)
-	if err != nil {
-		return "", "", err
-	}
-
-	return *res.AccessToken, *res.RefreshToken, nil
+	return client.service.RefreshToken(ctx, req)
 }
 
-func (client *AuthClient) Logout(accessToken string) (res bool, err error) {
+func (client *AuthClient) Logout(accessToken string) (*pb.LogoutResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -81,15 +66,10 @@ func (client *AuthClient) Logout(accessToken string) (res bool, err error) {
 		AccessToken: proto.String(accessToken),
 	}
 
-	resp, err := client.service.Logout(ctx, req)
-	if err != nil {
-		return false, err
-	}
-
-	return *resp.Success, nil
+	return client.service.Logout(ctx, req)
 }
 
-func (client *AuthClient) SetMasterKey(accessToken string, salt, verifier []byte) error {
+func (client *AuthClient) SetMasterKey(accessToken string, salt, verifier []byte) (*pb.SetMasterKeyResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -100,11 +80,10 @@ func (client *AuthClient) SetMasterKey(accessToken string, salt, verifier []byte
 		Verifier: verifier,
 	}
 
-	_, err := client.service.SetMasterKey(ctx, req)
-	return err
+	return client.service.SetMasterKey(ctx, req)
 }
 
-func (client *AuthClient) GetMasterKeyData(accessToken string) (salt, verifier []byte, hasMasterKey bool, err error) {
+func (client *AuthClient) GetMasterKeyData(accessToken string) (*pb.GetMasterKeyDataResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -112,15 +91,10 @@ func (client *AuthClient) GetMasterKeyData(accessToken string) (salt, verifier [
 
 	req := &pb.GetMasterKeyDataRequest{}
 
-	res, err := client.service.GetMasterKeyData(ctx, req)
-	if err != nil {
-		return nil, nil, false, err
-	}
-
-	return res.Salt, res.Verifier, res.GetHasMasterKey(), nil
+	return client.service.GetMasterKeyData(ctx, req)
 }
 
-func (client *AuthClient) HasMasterKey(accessToken string) (bool, error) {
+func (client *AuthClient) HasMasterKey(accessToken string) (*pb.HasMasterKeyResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -128,10 +102,5 @@ func (client *AuthClient) HasMasterKey(accessToken string) (bool, error) {
 
 	req := &pb.HasMasterKeyRequest{}
 
-	res, err := client.service.HasMasterKey(ctx, req)
-	if err != nil {
-		return false, err
-	}
-
-	return res.GetHasMasterKey(), nil
+	return client.service.HasMasterKey(ctx, req)
 }

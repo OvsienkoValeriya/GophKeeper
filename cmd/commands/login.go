@@ -20,29 +20,29 @@ var loginCmd = &cobra.Command{
 		username, _ := cmd.Flags().GetString("username")
 		password, _ := cmd.Flags().GetString("password")
 
-		userIDStr, accessToken, refreshToken, err := authClient.Login(username, password)
+		resp, err := authClient.Login(username, password)
 		if err != nil {
 			fmt.Printf("Login failed: %v\n", err)
 			return
 		}
 
-		userID, _ := strconv.ParseUint(userIDStr, 10, 64)
+		userID, _ := strconv.ParseUint(resp.GetUserId(), 10, 64)
 
 		expiresAt := time.Now().Add(time.Hour * 1)
-		err = tokenStore.SaveTokensWithUserID(uint(userID), accessToken, refreshToken, expiresAt)
+		err = tokenStore.SaveTokensWithUserID(uint(userID), resp.GetAccessToken(), resp.GetRefreshToken(), expiresAt)
 		if err != nil {
 			fmt.Printf("Failed to save tokens: %v\n", err)
 			return
 		}
-		fmt.Printf("Login successful! User ID: %s\n", userIDStr)
+		fmt.Printf("Login successful! User ID: %s\n", resp.GetUserId())
 
-		salt, verifier, hasMasterKey, err := authClient.GetMasterKeyData(accessToken)
+		respMK, err := authClient.GetMasterKeyData(resp.GetAccessToken())
 		if err != nil {
 			fmt.Printf("Warning: failed to get master key data: %v\n", err)
 			return
 		}
 
-		if !hasMasterKey {
+		if !respMK.GetHasMasterKey() {
 			fmt.Println("\n⚠ Master key not initialized. Run 'gophkeeper init' to set it up.")
 			return
 		}
@@ -54,7 +54,7 @@ var loginCmd = &cobra.Command{
 			return
 		}
 
-		if err := masterKeyStore.Unlock(masterPassword, salt, verifier); err != nil {
+		if err := masterKeyStore.Unlock(masterPassword, respMK.GetSalt(), respMK.GetVerifier()); err != nil {
 			fmt.Printf("✗ Failed to unlock: %v\n", err)
 			fmt.Println("Your secrets remain locked. Use 'gophkeeper unlock' to try again.")
 			return

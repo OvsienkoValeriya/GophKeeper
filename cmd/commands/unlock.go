@@ -26,13 +26,13 @@ var unlockCmd = &cobra.Command{
 			return
 		}
 
-		salt, verifier, hasMasterKey, err := authClient.GetMasterKeyData(accessToken)
+		respMK, err := authClient.GetMasterKeyData(accessToken)
 		if err != nil {
 			fmt.Printf("Failed to get master key data: %v\n", err)
 			return
 		}
 
-		if !hasMasterKey {
+		if !respMK.GetHasMasterKey() {
 			fmt.Println("Master key not initialized. Run 'gophkeeper init' first.")
 			return
 		}
@@ -43,7 +43,7 @@ var unlockCmd = &cobra.Command{
 			return
 		}
 
-		if err := masterKeyStore.Unlock(masterPassword, salt, verifier); err != nil {
+		if err := masterKeyStore.Unlock(masterPassword, respMK.GetSalt(), respMK.GetVerifier()); err != nil {
 			fmt.Printf("✗ Invalid master key: %v\n", err)
 			return
 		}

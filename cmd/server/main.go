@@ -39,6 +39,11 @@ func main() {
 	defer userStore.Close()
 	log.Println("Connected to database")
 
+	if err := userStore.RunMigrations(); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+	log.Println("Migrations run successfully")
+
 	resourceRepo, err := storage.NewPostgresResourceRepository(databaseURL)
 	if err != nil {
 		log.Fatalf("Failed to create resource repository: %v", err)

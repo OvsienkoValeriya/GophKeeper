@@ -45,18 +45,18 @@ func NewMinioStorage(endpoint, accessKey, secretKey, bucketName string, useSSL b
 	}, nil
 }
 
-func (s *MinioStorage) Upload(ctx context.Context, key string, reader io.Reader, size int64) error {
-	_, err := s.client.PutObject(ctx, s.bucketName, key, reader, size, minio.PutObjectOptions{})
+func (s *MinioStorage) Upload(ctx context.Context, key string, reader io.Reader, size int64, options minio.PutObjectOptions) error {
+	_, err := s.client.PutObject(ctx, s.bucketName, key, reader, size, options)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *MinioStorage) Download(ctx context.Context, key string) (io.ReadCloser, error) {
-	return s.client.GetObject(ctx, s.bucketName, key, minio.GetObjectOptions{})
+func (s *MinioStorage) Download(ctx context.Context, key string, options minio.GetObjectOptions) (io.ReadCloser, error) {
+	return s.client.GetObject(ctx, s.bucketName, key, options)
 }
 
-func (s *MinioStorage) Delete(ctx context.Context, key string) error {
-	return s.client.RemoveObject(ctx, s.bucketName, key, minio.RemoveObjectOptions{})
+func (s *MinioStorage) Delete(ctx context.Context, key string, options minio.RemoveObjectOptions) error {
+	return s.client.RemoveObject(ctx, s.bucketName, key, options)
 }

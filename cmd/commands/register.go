@@ -20,20 +20,20 @@ var registerCmd = &cobra.Command{
 		username, _ := cmd.Flags().GetString("username")
 		password, _ := cmd.Flags().GetString("password")
 
-		userIDStr, accessToken, refreshToken, err := authClient.Register(username, password)
+		respRegister, err := authClient.Register(username, password)
 		if err != nil {
 			fmt.Printf("Registration failed: %v\n", err)
 			return
 		}
 
-		userID, _ := strconv.ParseUint(userIDStr, 10, 64)
+		userID, _ := strconv.ParseUint(respRegister.GetUserId(), 10, 64)
 
 		expiresAt := time.Now().Add(time.Hour)
-		if err := tokenStore.SaveTokensWithUserID(uint(userID), accessToken, refreshToken, expiresAt); err != nil {
+		if err := tokenStore.SaveTokensWithUserID(uint(userID), respRegister.GetAccessToken(), respRegister.GetRefreshToken(), expiresAt); err != nil {
 			fmt.Printf("Failed to save tokens: %v\n", err)
 			return
 		}
-		fmt.Printf("Registration successful! User ID: %s\n", userIDStr)
+		fmt.Printf("Registration successful! User ID: %s\n", respRegister.GetUserId())
 	},
 }
 

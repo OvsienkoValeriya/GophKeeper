@@ -154,7 +154,7 @@ func (s *ResourceServer) DeleteResource(ctx context.Context, req *pb.DeleteResou
 func getUserIDFromContext(ctx context.Context) (int64, error) {
 	userID, ok := ctx.Value(UserIDKey).(int64)
 	if !ok {
-		return 0, errors.New("userID not found in context")
+		return 0, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
 	return userID, nil
 }

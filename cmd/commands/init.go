@@ -70,7 +70,7 @@ var initCmd = &cobra.Command{
 			return
 		}
 
-		if err := authClient.SetMasterKey(accessToken, salt, verifier); err != nil {
+		if _, err := authClient.SetMasterKey(accessToken, salt, verifier); err != nil {
 			fmt.Printf("Error saving master key to server: %v\n", err)
 			masterKeyStore.Lock()
 			return
