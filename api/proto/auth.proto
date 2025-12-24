@@ -1,0 +1,83 @@
+edition = "2023";
+
+package gophkeeper.auth;
+
+option go_package = "github.com/OvsienkoValeriya/GophKeeper/api/gen;gen";
+
+service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  
+  rpc Login(LoginRequest) returns (LoginResponse);
+  
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+
+  rpc SetMasterKey(SetMasterKeyRequest) returns (SetMasterKeyResponse);
+  
+  rpc GetMasterKeyData(GetMasterKeyDataRequest) returns (GetMasterKeyDataResponse);
+  
+  rpc HasMasterKey(HasMasterKeyRequest) returns (HasMasterKeyResponse);
+}
+
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message RegisterResponse {
+  string user_id = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string user_id = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message LogoutRequest {
+  string access_token = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message SetMasterKeyRequest {
+  bytes salt = 1;
+  bytes verifier = 2;
+}
+
+message SetMasterKeyResponse {
+  bool success = 1;
+}
+
+message GetMasterKeyDataRequest {}
+
+message GetMasterKeyDataResponse {
+  bytes salt = 1;
+  bytes verifier = 2;
+  bool has_master_key = 3;
+}
+
+message HasMasterKeyRequest {}
+
+message HasMasterKeyResponse {
+  bool has_master_key = 1;
+}

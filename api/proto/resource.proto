@@ -1,0 +1,81 @@
+edition = "2023";
+
+package gophkeeper.resource;
+option go_package = "github.com/OvsienkoValeriya/GophKeeper/api/gen;gen";
+
+
+service ResourceService {
+    
+    rpc CreateResource(CreateResourceRequest) returns (CreateResourceResponse);
+    
+    rpc GetResource(GetResourceRequest) returns (GetResourceResponse);
+    
+    rpc GetResourceByName(GetResourceByNameRequest) returns (GetResourceResponse);
+    
+    rpc ListResources(ListResourcesRequest) returns (ListResourcesResponse);
+    
+    rpc UpdateResource(UpdateResourceRequest) returns (UpdateResourceResponse);
+    
+    rpc DeleteResource(DeleteResourceRequest) returns (DeleteResourceResponse);
+}
+
+message CreateResourceRequest {
+    string name = 1;
+    string type = 2;
+    bytes data = 3;
+}
+
+message CreateResourceResponse {
+    int64 id = 1;
+    string name = 2;
+    string type = 3;
+    int64 size = 4;
+    string created_at = 5;
+}
+
+message GetResourceRequest {
+    int64 id = 1;
+}
+
+message GetResourceByNameRequest {
+    string name = 1;
+}
+
+message GetResourceResponse {
+    int64 id = 1;
+    string name = 2;
+    string type = 3;
+    bytes data = 4;
+    int64 size = 5;
+    string created_at = 6;
+    string updated_at = 7;
+}
+
+message ListResourcesRequest {
+    string type = 1;
+}
+
+message ListResourcesResponse {
+    repeated GetResourceResponse resources = 1;
+}
+
+message UpdateResourceRequest {
+    int64 id = 1;
+    string name = 2;
+    string type = 3;
+    bytes data = 4;
+}
+
+message UpdateResourceResponse {
+    int64 id = 1;
+    string name = 2;
+    string updated_at = 3;
+}
+
+message DeleteResourceRequest {
+    int64 id = 1;
+}
+
+message DeleteResourceResponse {
+    bool success = 1;
+}
